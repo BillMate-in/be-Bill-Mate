@@ -4,57 +4,41 @@ namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-// Facade Validator yang kita gunakan untuk memvalidasi request data secara manual
 use Illuminate\Support\Facades\Validator;
 
 class RoomController extends Controller
 {   
      public function calculateSplitBill(Request $request)
     {
-        // 1. Tentukan aturan validasi sesuai kontrak data terbaru
+        //aturan validasi sesuai kontrak data terbaru
         $rules = [
-            // Nama restoran wajib diisi berupa string teks biasa
             'restaurantName' => 'required|string|max:255',
-            
-            // Nomor meja atau catatan tambahan wajib diisi berupa string/karakter alfanumerik
             'tableNumber' => 'required|string|max:50',
-            
-            // Kolom anggota (members) wajib berupa array dan minimal harus ada 1 nama terdaftar
             'members' => 'required|array|min:1',
-            'members.*' => 'required|string|max:100', // Setiap nama anggota harus berupa string teks
-            
-            // Kolom menu pesanan (items) wajib berupa array dan minimal ada 1 menu yang dipesan
+            'members.*' => 'required|string|max:100',
             'items' => 'required|array|min:1',
-            
-            // Kolompok biaya tambahan bersifat opsional, namun jika dikirim harus berupa objek/array
             'additionalCosts' => 'nullable|array',
-            
-            // Persentase pajak opsional, jika diisi harus berupa angka desimal/bulat antara 0% hingga 100%
             'additionalCosts.taxPercent' => 'nullable|numeric|min:0|max:100',
-            
-            // Nominal diskon opsional, jika diisi harus berupa angka positif
             'additionalCosts.discount' => 'nullable|numeric|min:0',
-            
-            // Nominal biaya tambahan (ongkir/parkir) opsional, jika diisi harus berupa angka positif
             'additionalCosts.extraFees' => 'nullable|numeric|min:0',
         ];
 
-        // 2. Lakukan pengecekan validasi terhadap data input request
+        // pengecekan validasi terhadap data input request
         $validator = Validator::make($request->all(), $rules);
 
-        // 3. Tangani jika data yang dikirim frontend tidak sesuai aturan validasi
+        //jika data yang dikirim frontend tidak sesuai aturan validasi
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Input data tidak valid sesuai format QRoom.',
-                'errors' => $validator->errors() // Mengembalikan rincian error spesifik untuk diproses di frontend
-            ], 422); // HTTP 422: Unprocessable Entity
+                'errors' => $validator->errors() 
+            ], 422);
         }
 
-        // 4. Ambil data yang berhasil tervalidasi dengan aman
+        //validasi data yang berhasil tervalidasi dengan aman
         $validatedData = $validator->validated();
 
-        // 5. Ekstraksi data payload dari frontend dengan menyiapkan fallback default value
+        //Ekstraksi data payload dari frontend dengan menyiapkan fallback default value
         $members = $validatedData['members'];
         $items = $validatedData['items'];
         $additionalCosts = $validatedData['additionalCosts'] ?? [];
@@ -64,21 +48,21 @@ class RoomController extends Controller
         $totalDiscount = $additionalCosts['discount'] ?? 0;
         $totalExtraFees = $additionalCosts['extraFees'] ?? 0;
 
-        // 6. Siapkan wadah struktur data untuk rincian tagihan per individu
+        // wadah struktur data untuk rincian tagihan per individu
         $memberBillBreakdown = [];
         foreach ($members as $memberName) {
             $memberBillBreakdown[$memberName] = [
                 'memberName' => $memberName,
-                'baseCost' => 0,      // Menampung total harga makanan pokok yang dipesan sendiri
-                'taxShare' => 0,      // Menampung porsi pajak proporsional hasil kalkulasi
-                'discountShare' => 0, // Menampung porsi diskon proporsional hasil kalkulasi
-                'extraFeeShare' => 0, // Menampung porsi biaya flat bagi rata
-                'grandTotal' => 0,    // Menampung total tagihan akhir bersih per orang
-                'orderedItems' => []  // Menampung histori item apa saja yang dipesan oleh orang ini
+                'baseCost' => 0,      
+                'taxShare' => 0,      
+                'discountShare' => 0, 
+                'extraFeeShare' => 0, 
+                'grandTotal' => 0,    
+                'orderedItems' => []
             ];
         }
 
-        // 7. LANGKAH 1: Hitung total biaya makanan pokok (Base Cost) per anggota & total keseluruhan ruangan
+        // Penghitung total biaya makanan pokok (Base Cost) per anggota & total keseluruhan ruangan
         // Rumus Dasar: Total Harga Item = Harga Satuan * Kuantitas
         $totalRoomBaseCost = 0;
         foreach ($items as $item) {
@@ -99,12 +83,12 @@ class RoomController extends Controller
             }
         }
 
-        // 8. LANGKAH 2: Hitung pembagian biaya flat (dibagi rata sama besar ke semua anggota terdaftar)
+        // Penghitung pembagian biaya flat (dibagi rata sama besar ke semua anggota terdaftar)
         // Rumus: Biaya Flat per Anggota = Total Biaya Luar / Jumlah Anggota Terdaftar
         $memberCount = count($members);
         $flatFeeSharePerMember = $memberCount > 0 ? ($totalExtraFees / $memberCount) : 0;
 
-        // 9. LANGKAH 3: Loop kedua untuk menghitung variabel proporsional & total akhir bersih masing-masing orang
+        // Loop kedua untuk menghitung variabel proporsional & total akhir bersih masing-masing orang
         $totalRoomTax = 0;
         $totalRoomDiscount = 0;
         $calculatedRoomGrandTotal = 0;
@@ -140,7 +124,7 @@ class RoomController extends Controller
             $calculatedRoomGrandTotal += $memberGrandTotal;
         }
 
-        // 10. Konfigurasi info rekening host yang akan ditampilkan di struk digital
+        //Konfigurasi info rekening host yang akan ditampilkan di struk digital
         $hostTransferInfo = [
             'hostName' => $validatedData['hostName'] ?? $members[0], // fallback ke anggota pertama jika host tidak didefinisikan
             'paymentOptions' => [
@@ -149,7 +133,7 @@ class RoomController extends Controller
             ]
         ];
 
-        // 11. Mengirim kembali data kalkulasi utuh dalam format JSON standar REST API
+        // Mengirim kembali data kalkulasi utuh dalam format JSON standar REST API
         return response()->json([
             'success' => true,
             'message' => 'Proses pembagian tagihan (split-bill) adil telah selesai dihitung!',
@@ -165,7 +149,6 @@ class RoomController extends Controller
                     'totalExtraFees' => round($totalExtraFees),
                     'grandTotal' => round($calculatedRoomGrandTotal)
                 ],
-                // Mengubah array asosiatif ke bentuk numerik biasa agar ramah bagi pembacaan DOM Javascript di frontend
                 'membersBreakdown' => array_values($memberBillBreakdown),
                 'transferInfo' => $hostTransferInfo
             ]
@@ -173,14 +156,9 @@ class RoomController extends Controller
     }
 
 
- /**
-     * Mengarsipkan data split-bill yang telah selesai dikunci oleh host.
-     * Metode ini melakukan sanitasi input dan mengembalikan struktur data ringkas
-     * yang dioptimalkan untuk penyimpanan histori lokal browser (localStorage/IndexedDB).
-     */
     public function archiveRoom(Request $request)
     {
-        // 1. Aturan Validasi: Memastikan data minimal untuk menyusun item histori terpenuhi
+        // Aturan Validasi: Memastikan data minimal untuk menyusun item histori terpenuhi
         $rules = [
             'restaurantName' => 'required|string|max:255',
             'grandTotal'     => 'required|numeric|min:0',
@@ -188,7 +166,7 @@ class RoomController extends Controller
             'members.*'      => 'required|string|max:100',
         ];
 
-        // 2. Jalankan validasi untuk menolak payload yang rusak atau manipulatif
+        //validasi untuk menolak payload yang rusak atau manipulatif
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
@@ -199,15 +177,15 @@ class RoomController extends Controller
             ], 422); // HTTP 422: Unprocessable Entity
         }
 
-        // 3. Ambil data aman yang sudah lolos uji validasi
+        //Ambil data aman yang sudah lolos uji validasi
         $sanitizedData = $validator->validated();
 
-        // 4. Generate ID transaksi unik berformat #QR-2026-XXXX menggunakan fungsi bawaan PHP yang aman.
+        // Generate ID transaksi unik berformat #QR-2026-XXXX menggunakan fungsi bawaan PHP yang aman.
         // bin2hex(random_bytes(2)) menghasilkan 4 karakter alfanumerik acak yang aman dari tabrakan ID (collision).
         $uniqueHex = strtoupper(bin2hex(random_bytes(2)));
         $transactionId = '#QR-2026-' . $uniqueHex;
 
-        // 5. Rancang struktur payload arsip yang dioptimalkan untuk performa histori browser
+        //Rancang struktur payload arsip yang dioptimalkan untuk performa histori browser
         $archivePayload = [
             'transactionId'   => $transactionId,
             
@@ -233,7 +211,7 @@ class RoomController extends Controller
             'status'          => 'COMPLETED' 
         ];
 
-        // 6. Kirim respons konfirmasi sukses agar frontend aman menginstruksikan penyimpanan localStorage
+        //mengirim respons konfirmasi sukses agar frontend aman menginstruksikan penyimpanan localStorage
         return response()->json([
             'success' => true,
             'message' => 'Room berhasil dikunci. Sesi ini telah resmi diarsipkan.',
