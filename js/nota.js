@@ -1,11 +1,20 @@
-document.querySelectorAll('button.copy-btn').forEach(btn => {
-  btn.addEventListener('click', function () {
-    const originalIcon = this.textContent;
-    this.textContent = 'check';
-    this.classList.add('text-green-600');
+document.addEventListener('DOMContentLoaded', () => {
+
+  const copyButton = document.querySelector('.copy-btn');
+
+  if (!copyButton) return;
+
+  copyButton.addEventListener('click', () => {
+
+    const icon = copyButton.querySelector('.material-symbols-outlined');
+
+    if (!icon) return;
+
+    icon.textContent = 'check';
+
     setTimeout(() => {
-      this.textContent = originalIcon;
-      this.classList.remove('text-green-600');
+      icon.textContent = 'content_copy';
     }, 1500);
   });
+
 });

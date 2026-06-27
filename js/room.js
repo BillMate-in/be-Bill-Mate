@@ -1,12 +1,25 @@
-document.querySelectorAll('button').forEach(button => {
-    button.addEventListener('mousedown', function (e) {
-        const x = e.clientX - e.target.offsetLeft;
-        const y = e.clientY - e.target.offsetTop;
-        const ripples = document.createElement('span');
-        ripples.style.left = x + 'px';
-        ripples.style.top = y + 'px';
-        ripples.style.position = 'absolute'; 
-        this.appendChild(ripples);
-        setTimeout(() => { ripples.remove() }, 1000);
+document.addEventListener('DOMContentLoaded', () => {
+    const filterButtons = document.querySelectorAll('.flex.gap-sm button');
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active-pill');
+                btn.classList.add(
+                    'bg-surface-container-lowest',
+                    'border',
+                    'border-surface-variant',
+                    'text-secondary'
+                );
+            });
+
+            button.classList.add('active-pill');
+            button.classList.remove(
+                'bg-surface-container-lowest',
+                'border',
+                'border-surface-variant',
+                'text-secondary'
+            );
+        });
     });
 });
