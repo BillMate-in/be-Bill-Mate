@@ -10,7 +10,6 @@ class RoomController extends Controller
 {   
      public function calculateSplitBill(Request $request)
     {
-        //aturan validasi sesuai kontrak data terbaru
         $rules = [
             'restaurantName' => 'required|string|max:255',
             'tableNumber' => 'required|string|max:50',
@@ -96,7 +95,7 @@ class RoomController extends Controller
         foreach ($members as $memberName) {
             $memberBase = $memberBillBreakdown[$memberName]['baseCost'];
 
-            // A. RUMUS DISKON PROPORSIONAL (Mencegah error division by zero):
+            // A. RUMUS DISKON PROPORSIONAL 
             // Rasio Kontribusi = Base Cost Individu / Total Base Cost Kamar
             // Porsi Diskon = Rasio Kontribusi * Total Diskon Toko
             $memberDiscountShare = 0;
