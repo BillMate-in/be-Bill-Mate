@@ -176,7 +176,7 @@ class RoomController extends Controller
             ], 422); // HTTP 422: Unprocessable Entity
         }
 
-        //Ambil data aman yang sudah lolos uji validasi
+        //Ambil data aman yang sudah lolos uji validasi 
         $sanitizedData = $validator->validated();
 
         // Generate ID transaksi unik berformat #QR-2026-XXXX menggunakan fungsi bawaan PHP yang aman.
@@ -190,7 +190,7 @@ class RoomController extends Controller
             
             // XSS Protection: Bersihkan string nama restoran dari tag HTML tak dikenal
             'restaurantName'  => strip_tags($sanitizedData['restaurantName']), 
-            
+                
             // Format tanggal ramah pengguna untuk langsung dicetak di kartu UI
             'date'            => date('M d, Y'), 
             
