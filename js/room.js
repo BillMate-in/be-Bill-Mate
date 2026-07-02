@@ -157,15 +157,16 @@ window.recalculateLocalTotals = recalculateLocalTotals;
         });
     }
 
+    // ==========================================
+    // 6. EVENT LISTENER: KIRIM DATA KE BACKEND LARAVEL (API SERVICE VERSION)
+    // ==========================================
     lockRoomBtn.addEventListener('click', async (e) => {
         e.preventDefault();
 
-        
         const restaurantName = sessionStorage.getItem('restaurantName') || 'Restoran Tanpa Nama';
         const hostName = sessionStorage.getItem('hostName') || 'Host';
         const tableNumber = sessionStorage.getItem('tableNumber') || 'Meja Umum';
 
-    
         const members = Array.from(userInputSelect.options).map(option => option.value);
 
         if (members.length === 0) {
@@ -209,7 +210,7 @@ window.recalculateLocalTotals = recalculateLocalTotals;
             }
         };
 
-        
+        // Mengubah status visual tombol menjadi mode loading
         lockRoomBtn.disabled = true;
         lockRoomBtn.innerHTML = `
             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -220,41 +221,39 @@ window.recalculateLocalTotals = recalculateLocalTotals;
         `;
 
         try {
-            // Kirim data ke Laravel API
-            const response = await fetch('http://127.0.0.1:8000/api/split-bill/calculate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
+            // ==========================================
+            // IMPLEMENTASI BARU: Memanggil API Client Abstraksi
+            // ==========================================
+            // Kita tidak lagi memanggil fetch mentah di sini, melainkan menyerahkannya ke kelas servis global.
+            const result = await window.billMateAPI.calculateSplitBill(payload);
 
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                
+            if (result && result.success) {
+                // Simpan hasil perhitungan final ke localStorage untuk dicetak di nota.html
                 localStorage.setItem('calculatedBill', JSON.stringify(result.data));
                 
+                // Perbarui database riwayat lokal browser (billHistory)
                 const existingHistory = JSON.parse(localStorage.getItem('billHistory') || '[]');
-                
                 const billWithTimestamp = { 
                     ...result.data, 
                     timestamp: Math.floor(Date.now() / 1000) 
                 };
                 
                 existingHistory.push(billWithTimestamp);
-                
                 localStorage.setItem('billHistory', JSON.stringify(existingHistory));
                 
+                // KEAMANAN RULE 1: Hapus total session storage agar room aktif tidak bisa dimasuki kembali
+                sessionStorage.clear();
+                
+                // KEAMANAN RULE 2: Gunakan .replace() untuk mencegah pengguna menekan tombol "Back" di browser
                 window.location.replace('nota.html');
             } else {
-                alert('Gagal menghitung: ' + (result.message || 'Terjadi kesalahan sistem.'));
+                alert('Gagal menghitung: Format respons server tidak valid.');
                 resetLockButton(lockRoomBtn);
             }
         } catch (error) {
             console.error('API Error:', error);
-            alert('Gagal terhubung ke server Laravel backend. Pastikan server sudah dijalankan!');
+            // Menangkap pesan error dari validasi Laravel (HTTP 422) atau kegagalan jaringan secara terpadu
+            alert('Gagal terhubung ke server Laravel: ' + error.message);
             resetLockButton(lockRoomBtn);
         }
     });
