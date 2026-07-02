@@ -1,15 +1,6 @@
-/**
- * BILLMATE - ROOM INTERACTIVE ENGINE
- * Pengembang: Erynd (Senior Backend Engineer & Tech Mentor)
- * 
- * Semua fungsi interaktif disatukan di sini agar sinkronisasi data lokal (DOM)
- * dan kalkulasi matematika di sisi backend berjalan harmonis.
- */
+
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ==========================================
-    // 1. ANIMASI PIL FILTER (DENGAN SAFEGUARD)
-    // ==========================================
     const filterButtons = document.querySelectorAll('.flex.gap-sm button');
 
     filterButtons.forEach(button => {
@@ -46,9 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ==========================================
-    // 2. INISIALISASI ELEMEN UTAMA DASHBOARD
-    // ==========================================
+    
     const lockRoomBtn = document.getElementById('lockRoomBtn');
     const btnJoinFake = document.getElementById('btnJoinFake');
     const userInputSelect = document.getElementById('userInput');
@@ -74,9 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userInputSelect.add(defaultOption);
     }
 
-    // ==========================================
-    // 3. EVENT LISTENER: TAMBAH ANGGOTA BARU
-    // ==========================================
     if (btnJoinFake && userInputSelect) {
         btnJoinFake.addEventListener('click', (e) => {
             e.preventDefault(); // Mencegah reload halaman
@@ -92,20 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Tambahkan nama baru ke dropdown select
             const option = new Option(trimmedName, trimmedName);
             userInputSelect.add(option);
-            userInputSelect.value = trimmedName; // Otomatis pilih nama baru tersebut
+            userInputSelect.value = trimmedName; 
         });
     }
 
-    // ==========================================
-    // 4. FUNGSI: HITUNG ULANG RINGKASAN DI LAYAR (REAL-TIME PREVIEW)
-    // ==========================================
     function recalculateLocalTotals() {
         let totalBaseCost = 0;
 
-        // Kumpulkan semua kartu pesanan aktif dari DOM
         const itemCards = document.querySelectorAll('#itemList > .item-card');
         itemCards.forEach(card => {
             const price = parseFloat(card.getAttribute('data-price') || 0);
@@ -113,25 +94,21 @@ document.addEventListener('DOMContentLoaded', () => {
             totalBaseCost += (price * qty);
         });
 
-        // Kumpulkan parameter biaya tambahan saat ini
         const taxPercent = parseFloat(document.getElementById('taxInput').value) || 0;
         const discount = parseFloat(document.getElementById('discountInput').value) || 0;
         const extraFees = parseFloat(document.getElementById('extraFee').value) || 0;
 
-        // Logika kalkulasi matematis sederhana untuk visual preview di sisi client
         const taxAmount = totalBaseCost * (taxPercent / 100);
         const grandTotal = totalBaseCost + taxAmount - discount + extraFees;
 
-        // Render hasil perhitungan ke elemen UI teks secara dinamis
         document.getElementById('subtotal').textContent = `Rp ${totalBaseCost.toLocaleString('id-ID')}`;
         document.getElementById('tax').textContent = `Rp ${taxAmount.toLocaleString('id-ID')}`;
         document.getElementById('fees').textContent = `Rp ${extraFees.toLocaleString('id-ID')}`;
         document.getElementById('grandTotal').textContent = `Rp ${Math.max(0, grandTotal).toLocaleString('id-ID')}`;
-        // Tambahkan baris ini di baris terakhir di dalam fungsi recalculateLocalTotals Anda:
+
 window.recalculateLocalTotals = recalculateLocalTotals;
     }
 
-    // Pasang pendengar (listener) perubahan angka pada kolom input sebelah kanan agar langsung auto-recalculate
     ['taxInput', 'discountInput', 'extraFee'].forEach(id => {
         const inputElement = document.getElementById(id);
         if (inputElement) {
@@ -139,9 +116,7 @@ window.recalculateLocalTotals = recalculateLocalTotals;
         }
     });
 
-    // ==========================================
-    // 5. EVENT LISTENER: TAMBAH PESANAN (ADD ITEM)
-    // ==========================================
+  
     if (btnAddItem && foodInput && priceInput && qtyInput && itemList) {
         btnAddItem.addEventListener('click', (e) => {
             e.preventDefault();
@@ -151,7 +126,7 @@ window.recalculateLocalTotals = recalculateLocalTotals;
             const foodQty = parseInt(qtyInput.value) || 1;
             const foodUser = userInputSelect.value;
 
-            // Validasi input data pesanan
+           
             if (!foodName) {
                 alert('Mohon isi nama makanan atau minuman!');
                 return;
@@ -169,35 +144,28 @@ window.recalculateLocalTotals = recalculateLocalTotals;
                 return;
             }
 
-            // Panggil fungsi pembantu createItemCardElement untuk merakit DOM elemen kartu pesanan
             const newItemCard = createItemCardElement(foodName, foodPrice, foodQty, foodUser);
             
-            // Masukkan elemen baru ke dalam daftar pesanan aktif di layar
             itemList.appendChild(newItemCard);
 
-            // Reset form input agar siap untuk input berikutnya
             foodInput.value = '';
             priceInput.value = '';
             qtyInput.value = '1';
 
-            // Pemicu kalkulasi ulang agar subtotal dan grand total langsung sinkron di layar
             recalculateLocalTotals();
 
         });
     }
 
-    // ==========================================
-    // 6. EVENT LISTENER: KIRIM DATA KE BACKEND LARAVEL
-    // ==========================================
     lockRoomBtn.addEventListener('click', async (e) => {
         e.preventDefault();
 
-        // Ambil data restoran dan rekening dari sessionStorage hasil input createroom.html
+        
         const restaurantName = sessionStorage.getItem('restaurantName') || 'Restoran Tanpa Nama';
         const hostName = sessionStorage.getItem('hostName') || 'Host';
         const tableNumber = sessionStorage.getItem('tableNumber') || 'Meja Umum';
 
-        // Ambil seluruh nama anggota dari dropdown
+    
         const members = Array.from(userInputSelect.options).map(option => option.value);
 
         if (members.length === 0) {
@@ -205,7 +173,6 @@ window.recalculateLocalTotals = recalculateLocalTotals;
             return;
         }
 
-        // Kumpulkan Daftar Pesanan Aktif (Items) dari DOM #itemList
         const items = [];
         const itemCards = document.querySelectorAll('#itemList > .item-card');
 
@@ -225,12 +192,10 @@ window.recalculateLocalTotals = recalculateLocalTotals;
             return;
         }
 
-        // Kumpulkan Komponen Biaya Tambahan (Additional Costs) dari Kolom Kanan
         const taxPercent = parseFloat(document.getElementById('taxInput').value) || 0;
         const discount = parseFloat(document.getElementById('discountInput').value) || 0;
         const extraFees = parseFloat(document.getElementById('extraFee').value) || 0;
 
-        // Susun Payload JSON sesuai Kontrak Laravel Backend
         const payload = {
             restaurantName: restaurantName,
             tableNumber: tableNumber,
@@ -244,7 +209,7 @@ window.recalculateLocalTotals = recalculateLocalTotals;
             }
         };
 
-        // Feedback Visual: Ubah tombol menjadi mode loading tanpa merusak class sekitarnya
+        
         lockRoomBtn.disabled = true;
         lockRoomBtn.innerHTML = `
             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -268,13 +233,11 @@ window.recalculateLocalTotals = recalculateLocalTotals;
             const result = await response.json();
 
             if (response.ok && result.success) {
-                // 1. Simpan hasil perhitungan aktif untuk dibaca halaman nota.html saat ini
+                
                 localStorage.setItem('calculatedBill', JSON.stringify(result.data));
                 
-                // 2. LOGIKA BARU: Ambil array riwayat lama atau buat array baru jika masih kosong
                 const existingHistory = JSON.parse(localStorage.getItem('billHistory') || '[]');
                 
-                // Tambahkan data nota baru ke dalam array, sekaligus selipkan properti timestamp untuk sorting waktu
                 const billWithTimestamp = { 
                     ...result.data, 
                     timestamp: Math.floor(Date.now() / 1000) 
@@ -282,10 +245,8 @@ window.recalculateLocalTotals = recalculateLocalTotals;
                 
                 existingHistory.push(billWithTimestamp);
                 
-                // Simpan kembali array kumpulan riwayat yang sudah terupdate ke localStorage
                 localStorage.setItem('billHistory', JSON.stringify(existingHistory));
                 
-                // Redirect ke halaman nota
                 window.location.replace('nota.html');
             } else {
                 alert('Gagal menghitung: ' + (result.message || 'Terjadi kesalahan sistem.'));
@@ -299,7 +260,6 @@ window.recalculateLocalTotals = recalculateLocalTotals;
     });
 });
 
-// Fungsi pembantu untuk mengembalikan status tombol jika pengiriman gagal
 function resetLockButton(button) {
     button.disabled = false;
     button.innerHTML = `
@@ -308,30 +268,17 @@ function resetLockButton(button) {
     `;
 }
 
-/**
- * FUNGSI PENOLONG (HELPER FUNCTION)
- * 
- * Membuat elemen kartu pesanan (DOM Element) baru secara dinamis.
- */
-/**
- * FUNGSI PENOLONG (HELPER FUNCTION) - VERSI CRUD AKTIF
- * 
- * Membuat elemen kartu pesanan (DOM Element) baru secara dinamis lengkap dengan
- * tombol Edit (ikon pensil) dan Delete (ikon tempat sampah).
- */
 function createItemCardElement(foodName, foodPrice, foodQty, foodUser) {
     const itemCard = document.createElement('div');
     
-    // Memberikan class Tailwind agar tampilan kartu rapi
+
     itemCard.className = "item-card flex justify-between items-center bg-surface-container-low p-sm rounded-2xl shadow-sm border border-surface-variant/30";
 
-    // Menanamkan data-attribute (sangat vital untuk dibaca oleh fungsi pengikis DOM)
     itemCard.setAttribute('data-name', foodName);
     itemCard.setAttribute('data-price', foodPrice);
     itemCard.setAttribute('data-qty', foodQty);
     itemCard.setAttribute('data-user', foodUser);
     
-    // Menyusun struktur visual kartu pesanan lengkap dengan tombol Edit dan Delete
     itemCard.innerHTML = `
         <div class="flex items-center gap-sm">
             <span class="material-symbols-outlined text-primary-container bg-primary-fixed/20 p-sm rounded-xl">restaurant</span>
@@ -356,41 +303,33 @@ function createItemCardElement(foodName, foodPrice, foodQty, foodUser) {
         </div>
     `;
 
-    // ==========================================
-    // AKSI 1: LOGIKA TOMBOL HAPUS (DELETE)
-    // ==========================================
     const deleteBtn = itemCard.querySelector('.btn-delete');
     deleteBtn.addEventListener('click', (e) => {
         e.preventDefault();
         const currentName = itemCard.getAttribute('data-name');
         
         if (confirm(`Apakah Anda yakin ingin menghapus pesanan "${currentName}"?`)) {
-            // Hapus kartu elemen dari struktur HTML halaman
+            
             itemCard.remove();
 
-            // Pemicu hitung ulang subtotal dan grand total instan di panel kanan jika fungsi global tersedia
             if (typeof window.recalculateLocalTotals === 'function') {
                 window.recalculateLocalTotals();
             }
         }
     });
 
-    // ==========================================
-    // AKSI 2: LOGIKA TOMBOL EDIT (UPDATE)
-    // ==========================================
     const editBtn = itemCard.querySelector('.btn-edit');
     editBtn.addEventListener('click', (e) => {
         e.preventDefault();
 
-        // Ambil nilai data-attribute yang saat ini aktif tersimpan di kartu
+        
         const currentName = itemCard.getAttribute('data-name');
         const currentPrice = itemCard.getAttribute('data-price');
         const currentQty = itemCard.getAttribute('data-qty');
         const currentUser = itemCard.getAttribute('data-user');
 
-        // 1. Ambil input pembaruan menggunakan popup prompt interaktif
         const newName = prompt('Ubah nama makanan/minuman:', currentName);
-        if (newName === null) return; // Batalkan jika menekan tombol Cancel
+        if (newName === null) return; 
         if (newName.trim() === '') {
             alert('Nama makanan/minuman tidak boleh kosong!');
             return;
@@ -412,17 +351,14 @@ function createItemCardElement(foodName, foodPrice, foodQty, foodUser) {
             return;
         }
 
-        // 2. Perbarui data-attribute pada elemen kartu pembungkus (sangat krusial untuk scraper)
         itemCard.setAttribute('data-name', newName.trim());
         itemCard.setAttribute('data-price', newPrice);
         itemCard.setAttribute('data-qty', newQty);
 
-        // 3. Perbarui visual teks DOM di dalam kartu agar sinkron dengan data baru
         itemCard.querySelector('.item-name-text').textContent = newName.trim();
         itemCard.querySelector('.item-details-text').textContent = `${currentUser} • Rp ${newPrice.toLocaleString('id-ID')}`;
         itemCard.querySelector('.item-qty-text').textContent = `x${newQty}`;
 
-        // 4. Pemicu hitung ulang subtotal dan grand total instan di panel kanan jika fungsi global tersedia
         if (typeof window.recalculateLocalTotals === 'function') {
             window.recalculateLocalTotals();
         }

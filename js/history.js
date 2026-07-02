@@ -24,15 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/**
- * BILLMATE - HISTORY MANAGEMENT ENGINE (RICH JSON SCHEMA VERSION)
- * Pengembang: Erynd (Senior Backend Engineer & Tech Mentor)
- */
+
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ==========================================
-    // 1. ANIMASI VISUAL TAB FILTER PILL
-    // ==========================================
+    
     const filterButtons = document.querySelectorAll('.flex.gap-sm button');
 
     filterButtons.forEach(button => {
@@ -60,10 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ==========================================
-    // 2. INISIALISASI STATE & ELEMEN DOM UTAMA
-    // ==========================================
-    let historyData = []; // Menggunakan satu penamaan variabel 'historyData' secara konsisten
+    
+    let historyData = [];
     const historyListContainer = document.getElementById('historyList');
     const searchInput = document.querySelector('input[placeholder="Cari room..."]');
     const deleteAllBtn = document.getElementById('deleteAllBtn');
@@ -75,9 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!historyListContainer) return;
 
-    // ==========================================
-    // 3. FUNGSI: MEMUAT DATA DARI STORAGE (LOAD)
-    // ==========================================
+
     function loadHistoryFromStorage() {
         const rawHistory = localStorage.getItem('billHistory');
         historyData = rawHistory ? JSON.parse(rawHistory) : [];
@@ -91,12 +82,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================
-    // 4. FUNGSI: MERENDER LIST RIWAYAT KE LAYAR
-    // ==========================================
+   
     function renderHistoryList(dataToRender = null) {
         const data = dataToRender || historyData;
-        historyListContainer.innerHTML = ''; // Kosongkan elemen visual statis bawaan HTML
+        historyListContainer.innerHTML = '';
 
         // Tampilkan feedback visual jika data kosong
         if (data.length === 0) {
@@ -115,16 +104,17 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center bg-surface-container-lowest p-md rounded-2xl border border-surface-variant/40 shadow-sm gap-md w-full";
             
             // EKSTRAKSI PROPERTI DARI RICH JSON SCHEMA:
-            // - Nama Restoran langsung dibaca dari root objek
+            // - Nama Restoran  dari root objek
             const restaurantName = bill.restaurantName || 'Restoran Tanpa Nama';
-            // - ID Transaksi langsung dibaca dari root objek
+
+            // - ID Transaksi  dari root objek
             const transactionId = bill.transactionId || '#BM-2026-0000';
             const date = bill.date || 'Unknown Date';
             
-            // - Jumlah Anggota diekstraksi secara akurat dari panjang (.length) array membersBreakdown
+            
             const membersCount = bill.membersBreakdown ? bill.membersBreakdown.length : 0;
             
-            // - Nominal Grand Total diekstraksi dari objek properti bersarang bill.summary.grandTotal
+            
             const grandTotal = bill.summary ? bill.summary.grandTotal : 0;
 
             card.innerHTML = `
@@ -150,31 +140,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // EVENT LISTENER: Tombol "Lihat Detail" di dalam kartu
+      
             const detailBtn = card.querySelector('.btn-detail');
             detailBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 
-                // Setel objek utuh Rich JSON bill ini ke dalam key 'calculatedBill' agar langsung dicetak penuh oleh nota.html
+               
                 localStorage.setItem('calculatedBill', JSON.stringify(bill));
-                
-                // Alihkan ke nota.html
+              
                 window.location.href = 'nota.html';
             });
 
             historyListContainer.appendChild(card);
         });
 
-        // Perbarui ringkasan pagination info di bagian bawah layar
+
         const pageInfo = document.getElementById('pageInfo');
         if (pageInfo) {
             pageInfo.textContent = `Riwayat: ${data.length} Transaksi`;
         }
     }
 
-    // ==========================================
-    // 5. INTERAKSI: REAL-TIME SEARCH (CARI ROOM)
-    // ==========================================
+
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase().trim();
@@ -190,9 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================
-    // 6. INTERAKSI: TOMBOL HAPUS SEMUA (DELETE ALL)
-    // ==========================================
+
     if (deleteAllBtn) {
         deleteAllBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -210,9 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================
-    // 7. INTERAKSI: FILTER BERDASARKAN WAKTU (TIMESTAMP)
-    // ==========================================
     const nowInSeconds = Math.floor(Date.now() / 1000);
 
     if (allBtn) {
@@ -241,9 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==========================================
-    // 8. BOOTSTRAP: JALANKAN PROGRAM SAAT PAGE LOAD
-    // ==========================================
     loadHistoryFromStorage();
     renderHistoryList();
 });

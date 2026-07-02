@@ -19,33 +19,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// ... Kode copyButton yang sudah ada tetap dipertahankan di atas ...
 
-// 1. Tambahkan event listener baru untuk mendeteksi saat struktur halaman HTML selesai dimuat
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Ambil string JSON dari localStorage hasil penyimpanan di dashboard room
+
   const rawBillData = localStorage.getItem('calculatedBill');
 
   if (!rawBillData) {
     alert('Riwayat transaksi tidak ditemukan. Silakan buat rincian baru terlebih dahulu!');
-    window.location.href = 'index.html'; // Kembalikan ke halaman awal jika kosong
+    window.location.href = 'index.html';
     return;
   }
 
-  // Parse string JSON menjadi objek JavaScript utuh
+
   const calculatedBill = JSON.parse(rawBillData);
 
-  // 2. Populasi Informasi Header & Ringkasan Transaksi Utama
-  // Trik DOM: Kita mencari paragraph di bawah label "ID Transaksi" menggunakan selektor hirarki elemen anak
+ 
   const txIdElement = document.querySelector('.tracking-wider').nextElementSibling;
   if (txIdElement) {
     txIdElement.textContent = calculatedBill.transactionId || '#BM-2026-0000';
   }
 
-  // Merender tanggal transaksi di tempatnya
+  
   document.getElementById('transactionDate').textContent = calculatedBill.date || date('M d, Y');
 
-  // Merender data summary ringkasan nominal uang di bagian bawah nota
+ 
   const summary = calculatedBill.summary;
   document.getElementById('subtotalBill').textContent = `Rp ${summary.totalBaseCost.toLocaleString('id-ID')}`;
   document.getElementById('taxBill').textContent = `Rp ${summary.totalTax.toLocaleString('id-ID')}`;
@@ -53,28 +51,27 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('feesBill').textContent = `Rp ${summary.totalExtraFees.toLocaleString('id-ID')}`;
   document.getElementById('totalBill').textContent = `Rp ${summary.grandTotal.toLocaleString('id-ID')}`;
 
-  // 3. Merender Data Transfer Tujuan Rekening Host secara dinamis
+
   const transfer = calculatedBill.transferInfo;
   if (transfer && transfer.paymentOptions && transfer.paymentOptions.length > 0) {
-    // Ambil opsi pembayaran pertama (default) dari respons server
+    
     const primaryOption = transfer.paymentOptions[0];
     document.getElementById('hostTransfer').textContent = `Transfer ke Host (${transfer.hostName})`;
     document.getElementById('rekeningText').textContent = `${primaryOption.provider} - ${primaryOption.accountNumber}`;
   }
 
-  // 4. Generate Rincian Pembagian Tagihan Per Anggota (Breakdown List)
+
   const receiptItemsContainer = document.getElementById('receiptItems');
   if (!receiptItemsContainer) return;
 
-  // Kosongkan container dari data dummy statis HTML sebelum melakukan injeksi data dinamis
+
   receiptItemsContainer.innerHTML = '';
 
   calculatedBill.membersBreakdown.forEach(member => {
-    // Buat elemen penampung utama kartu anggota
+    // elemen penampung utama kartu anggota
     const memberCard = document.createElement('div');
     memberCard.className = 'pb-md border-b border-surface-variant/30 last:border-0 last:pb-0 space-y-sm';
 
-    // A. Buat baris informasi header nama anggota dan total tagihannya
     const memberHeader = `
       <div class="flex justify-between items-center">
         <span class="font-bold text-base text-on-surface">${member.memberName}</span>
@@ -82,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
-    // B. Buat baris detail menu-menu pokok yang dipesan oleh anggota ini secara dinamis
     let orderedItemsHtml = '';
     member.orderedItems.forEach(item => {
       orderedItemsHtml += `
@@ -92,8 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     }); 
-
-    // C. Buat baris detail biaya proporsional (Pajak, Diskon, Biaya Flat) jika nilainya lebih dari 0
+    
     let adjustmentsHtml = '';
     if (member.taxShare > 0) {
       adjustmentsHtml += `
@@ -132,9 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
     receiptItemsContainer.appendChild(memberCard);
   });
 
-// ========================================================
-  // 1. INTEGRASI CLIPBOARD: COPY NOMOR REKENING SAJA
-  // ========================================================
   // Menggunakan fallback selector yang cerdas untuk mengantisipasi jika class '.copy-btn' belum tertanam di HTML
   const copyButton = document.querySelector('.copy-btn') || document.querySelector('#rekeningText').nextElementSibling;
   const rekeningText = document.getElementById('rekeningText');
@@ -167,10 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ========================================================
-  // 2. BAGIKAN NOTA KE WHATSAPP DENGAN FORMAT TEXT INDAH
-  // ========================================================
-  // Menyeleksi tombol WhatsApp berdasarkan teks konten tombol
   const whatsappBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Bagikan ke WhatsApp'));
 
   if (whatsappBtn && calculatedBill) {
@@ -181,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const transfer = calculatedBill.transferInfo;
       const primaryOption = transfer?.paymentOptions?.[0];
 
-      // Merakit susunan pesan teks dengan menggunakan teknik template literal beralas simbol bintang (*) untuk bold di WhatsApp
+      //Pesan Otomatis untuk WA
       let textMessage = `*🧾 NOTA DIGITAL SPLIT-BILL - ${calculatedBill.restaurantName.toUpperCase()}*\n`;
       textMessage += `ID Transaksi: _${calculatedBill.transactionId}_\sn`;
       textMessage += `Tanggal: _${calculatedBill.date}_\n`;
@@ -216,15 +204,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ========================================================
-  // 3. NAVIGASI: TOMBOL LIHAT RIWAYAT
-  // ========================================================
+
   // Menyeleksi tombol riwayat berdasarkan pencarian teks tombol
   const historyBtn = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Lihat Riwayat Room'));
 
   if (historyBtn) {
     historyBtn.addEventListener('click', (e) => {
       e.preventDefault();
+
       // Navigasi instan ke halaman riwayat lokal
       window.location.href = 'history.html';
     });
