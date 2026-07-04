@@ -5,10 +5,10 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
-// Trik Profesional: Gunakan DB Facade untuk membungkus operasi multi-tabel dalam Database Transaction (ACID)
+// DB Facade untuk membungkus operasi multi-tabel dalam Database Transaction (ACID)
 use Illuminate\Support\Facades\DB;
 
-// Impor ke-3 Model Relasional yang telah dimigrasikan
+// Impor 3 Model Relasional 
 use App\Models\Transaction;
 use App\Models\TransactionMember;
 use App\Models\TransactionItem;
@@ -21,7 +21,7 @@ class RoomController extends Controller
      */
     public function calculateSplitBill(Request $request)
     {
-        // 1. Definisikan aturan validasi, termasuk menangkap bankName dan rekening dinamis dari frontend
+        // Deklarasi aturan validasi,menangkap bankName, dan rekening dinamis dari frontend
         $rules = [
             'restaurantName' => 'required|string|max:255',
             'tableNumber' => 'required|string|max:50',
@@ -49,7 +49,7 @@ class RoomController extends Controller
 
         $validatedData = $validator->validated();
 
-        // 2. Ekstraksi parameter dan setel nilai default (fallback)
+        // Ekstraksi parameter dan setel nilai default (fallback)
         $members = $validatedData['members'];
         $items = $validatedData['items'];
         $additionalCosts = $validatedData['additionalCosts'] ?? [];
@@ -72,7 +72,7 @@ class RoomController extends Controller
             ];
         }
 
-        // 3. KALKULASI LOOP 1: Hitung total biaya pokok per individu
+        // KALKULASI LOOP 1: Hitung total biaya pokok per individu
         $totalRoomBaseCost = 0;
         foreach ($items as $item) {
             $itemTotalCost = $item['price'] * $item['qty'];
@@ -94,7 +94,7 @@ class RoomController extends Controller
         $memberCount = count($members);
         $flatFeeSharePerMember = $memberCount > 0 ? ($totalExtraFees / $memberCount) : 0;
 
-        // 4. KALKULASI LOOP 2: Pajak, diskon, dan grand total per individu
+        // KALKULASI LOOP 2: Pajak, diskon, dan grand total per individu
         $totalRoomTax = 0;
         $totalRoomDiscount = 0;
         $calculatedRoomGrandTotal = 0;
@@ -138,11 +138,11 @@ class RoomController extends Controller
         // Generate ID transaksi unik
         $transactionId = 'QR-' . date('Ymd') . '-' . rand(1000, 9999);
 
-        // 5. PROSES PERSISTENSI DATABASE RELASIONAL (3-TIER NORMALIZED)
-        // Gunakan DB::transaction untuk menjamin bahwa seluruh data masuk dengan sukses (jika salah satu gagal, batalkan semua)
+        // PROSES PERSISTENSI DATABASE RELASIONAL (3-TIER NORMALIZED)
+        // DB::transaction untuk menjamin bahwa seluruh data masuk dengan sukses (jika salah satu gagal, batalkan semua)
         DB::transaction(function () use ($transactionId, $validatedData, $members, $items, $totalRoomBaseCost, $totalRoomTax, $totalDiscount, $totalExtraFees, $calculatedRoomGrandTotal, $memberBillBreakdown) {
             
-            // A. INSERT KE TABEL 1: Transactions (Parent Row)
+            // INSERT KE TABEL 1: Transactions (Parent Row)
             Transaction::create([
                 'transaction_id'    => $transactionId,
                 'restaurant_name'   => $validatedData['restaurantName'],
@@ -155,7 +155,7 @@ class RoomController extends Controller
                 'grand_total'       => round($calculatedRoomGrandTotal)
             ]);
 
-            // B. INSERT KE TABEL 2: Transaction Members (Child 1)
+            // INSERT KE TABEL 2: Transaction Members (Child 1)
             foreach ($memberBillBreakdown as $name => $breakdown) {
                 TransactionMember::create([
                     'transaction_id'  => $transactionId,
@@ -168,7 +168,7 @@ class RoomController extends Controller
                 ]);
             }
 
-            // C. INSERT KE TABEL 3: Transaction Items (Child 2)
+            // INSERT KE TABEL 3: Transaction Items (Child 2)
             foreach ($items as $item) {
                 TransactionItem::create([
                     'transaction_id' => $transactionId,
@@ -181,7 +181,7 @@ class RoomController extends Controller
             }
         });
 
-        // 6. KEMBALIKAN RESPONS JSON: Struktur 100% SAMA agar nota.js & history.js tidak pecah
+        // Mengembalikan RESPONS JSON: Struktur 100% SAMA agar nota.js & history.js tidak pecah
         return response()->json([
             'success' => true,
             'message' => 'Proses pembagian tagihan adil telah selesai dihitung dan disimpan secara relasional!',

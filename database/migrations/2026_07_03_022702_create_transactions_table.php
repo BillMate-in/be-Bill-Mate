@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
         $table->id();
-        $table->string('transaction_id')->unique(); // Pemicu relasi utama
+        $table->string('transaction_id')->unique(); // Primary Key
         $table->string('restaurant_name');
         $table->string('table_number');
         $table->string('host_name');
