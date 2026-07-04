@@ -9,7 +9,7 @@
 class BillMateAPI {
     constructor() {
         // Base URL mengarah ke server Laravel lokal Anda
-        this.baseUrl = 'http://127.0.0.1:8000/api';
+        this.baseUrl = 'http://bill-mate.web.id.preview.services/api';
     }
 
     /**

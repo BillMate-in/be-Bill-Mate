@@ -201,6 +201,8 @@ window.recalculateLocalTotals = recalculateLocalTotals;
             restaurantName: restaurantName,
             tableNumber: tableNumber,
             hostName: hostName,
+            bankName: sessionStorage.getItem('bankName') || '',
+            rekening: sessionStorage.getItem('rekening') || '',
             members: members,
             items: items,
             additionalCosts: {
@@ -208,6 +210,7 @@ window.recalculateLocalTotals = recalculateLocalTotals;
                 discount: discount,
                 extraFees: extraFees
             }
+            
         };
 
         // Mengubah status visual tombol menjadi mode loading
