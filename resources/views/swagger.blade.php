@@ -70,7 +70,7 @@
     <script>
         window.onload = () => {
             window.ui = SwaggerUIBundle({
-                url: '/swagger/openapi.json',
+                url: '/swagger/openapi.json?v=' + new Date().getTime(),
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
