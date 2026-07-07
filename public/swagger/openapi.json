@@ -7,6 +7,10 @@
   },
   "servers": [
     {
+      "url": "/",
+      "description": "Server Utama (Otomatis menyesuaikan domain)"
+    },
+    {
       "url": "http://localhost:8000",
       "description": "Server Lokal (Development)"
     }
